@@ -3,6 +3,11 @@
 // and the Airbyte sidebar logo.
 (function () {
   var BRAND = "PA ETL";
+  // Folder this script was loaded from (/__pa/ behind the gateway, /assets/pa/ inside Airbyte),
+  // so the logo and icon files are found wherever the brand files are served from.
+  var BASE = (function () {
+    try { return new URL(".", document.currentScript.src).pathname; } catch (e) { return "/__pa/"; }
+  })();
   var LABELS = { prefect: "Pipelines", airbyte: "Data sync" };
 
   // Prefect and Airbyte set their own titles ("Prefect Server", "Flows \u2022 Prefect Server").
@@ -26,11 +31,11 @@
     var i = document.createElement("link");
     i.rel = "icon";
     i.type = "image/png";
-    i.href = "/__pa/icon.png";
+    i.href = BASE + "icon.png";
     head.appendChild(i);
     var a = document.createElement("link");
     a.rel = "apple-touch-icon";
-    a.href = "/__pa/apple-icon.png";
+    a.href = BASE + "apple-icon.png";
     head.appendChild(a);
   }
 
@@ -107,7 +112,7 @@
       if (/^\s*Join the community\s*$/i.test(li.textContent)) li.style.display = "none";
     });
     var svg = document.querySelector('[data-sidebar="header"] svg, [data-sidebar="sidebar"] a[href="/"] > svg');
-    if (svg) overlay(svg, "/__pa/logo.svg", "display:block;height:34px;width:auto");
+    if (svg) overlay(svg, BASE + "logo.svg", "display:block;height:34px;width:auto");
   }
 
   // Airbyte's sidebar logo is an inline SVG. Hide the first SVG that sits at the top of the
@@ -120,7 +125,7 @@
     for (var i = 0; i < svgs.length; i++) {
       var r = svgs[i].getBoundingClientRect();
       if (svgs[i].closest("ul") || r.width < 20 || r.top - box.top > 90) continue;
-      overlay(svgs[i], "/__pa/logo.svg", "display:block;height:30px;width:auto;margin:14px 12px 6px");
+      overlay(svgs[i], BASE + "logo.svg", "display:block;height:30px;width:auto;margin:14px 12px 6px");
       sb.setAttribute("data-pa-logo", "1");
       return;
     }
@@ -129,7 +134,7 @@
   // Sign-in page logo ("Airbyte" wordmark).
   function airbyteLoginLogo() {
     document.querySelectorAll('svg[class*="LoginPage-module__loginPage__logo"]').forEach(function (svg) {
-      overlay(svg, "/__pa/logo-dark.svg", "display:block;height:40px;width:auto");
+      overlay(svg, BASE + "logo-dark.svg", "display:block;height:40px;width:auto");
     });
   }
 
@@ -142,7 +147,7 @@
       if (!t || !/^\s*Loading/i.test(t.textContent)) return;
       var r = svg.getBoundingClientRect();
       if (r.width < 30) return;
-      overlay(svg, "/__pa/mark-animated.svg", "display:block;width:" + Math.round(r.width) + "px;height:" + Math.round(r.height) + "px");
+      overlay(svg, BASE + "mark-animated.svg", "display:block;width:" + Math.round(r.width) + "px;height:" + Math.round(r.height) + "px");
     });
   }
 
@@ -169,7 +174,7 @@
       svg.insertBefore(glow, g);
       g.setAttribute("filter", "url(#paShadow)");
       var mark = document.createElementNS(NS, "image");
-      mark.setAttribute("href", "/__pa/mark-animated.svg");
+      mark.setAttribute("href", BASE + "mark-animated.svg");
       mark.setAttribute("x", "202"); mark.setAttribute("y", "111");
       mark.setAttribute("width", "88"); mark.setAttribute("height", "88");
       g.appendChild(mark);

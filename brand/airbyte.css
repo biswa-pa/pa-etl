@@ -65,7 +65,7 @@
 
 /* Airbyte's logo on the setup and sign-in pages. */
 img[src$="/logo.png"], img[src="/logo.png"] {
-  content: url(/__pa/logo-dark.svg);
+  content: url(logo-dark.svg);
   width: 190px !important;
   height: auto !important;
 }

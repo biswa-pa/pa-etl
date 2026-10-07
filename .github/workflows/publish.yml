@@ -1,6 +1,7 @@
 # Builds the PA ETL images and publishes them to GitHub Container Registry:
 #   ghcr.io/<owner>/pa-etl/prefect   Prefect server and worker with the pa_etl helpers
-#   ghcr.io/<owner>/pa-etl/gateway   portal, host routing and branding for Prefect and Airbyte
+#   ghcr.io/<owner>/pa-etl/gateway   portal and host routing for Prefect and Airbyte
+#   ghcr.io/<owner>/pa-etl/airbyte-server   the official airbyte/server with the PA ETL web UI (tagged with the Airbyte version)
 # Pushes to main publish :latest and :sha-<short>. A tag like v1.2.0 publishes :1.2.0 too.
 name: publish-images
 
@@ -26,6 +27,7 @@ jobs:
         include:
           - { name: prefect, file: prefect/Dockerfile }
           - { name: gateway, file: gateway/Dockerfile }
+          - { name: airbyte-server, file: airbyte/Dockerfile }
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +35,7 @@ jobs:
         id: v
         run: |
           echo "prefect_tag=$(grep -E '^PREFECT_TAG=' .env.example | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+          echo "airbyte_tag=$(grep -E '^AIRBYTE_TAG=' .env.example | cut -d= -f2)" >> "$GITHUB_OUTPUT"
           echo "owner=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-qemu-action@v3
@@ -53,6 +56,7 @@ jobs:
             type=sha,prefix=sha-
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ steps.v.outputs.airbyte_tag }},enable=${{ matrix.name == 'airbyte-server' }}
 
       - uses: docker/build-push-action@v6
         with:
@@ -64,5 +68,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PREFECT_TAG=${{ steps.v.outputs.prefect_tag }}
+            AIRBYTE_TAG=${{ steps.v.outputs.airbyte_tag }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}

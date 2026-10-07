@@ -13,7 +13,10 @@
 #   scripts/airbyte.sh uninstall     remove Airbyte (add --persisted to delete its data too)
 #
 # Settings: AIRBYTE_PORT (8000), AIRBYTE_LOW_RESOURCE (1 = less memory), ABCTL_VERSION (v0.30.4),
-#           PA_ETL_HOME (~/.pa-etl, where abctl is kept)
+#           PA_ETL_HOME (~/.pa-etl, where abctl is kept),
+#           AIRBYTE_BRANDED (1 = install with the PA ETL airbyte-server image, 0 = stock Airbyte),
+#           AIRBYTE_SERVER_IMAGE (ghcr.io/biswa-pa/pa-etl/airbyte-server),
+#           AIRBYTE_HOST (optional: the public host name Airbyte is reached by, for direct access)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -23,6 +26,36 @@ LOW="${AIRBYTE_LOW_RESOURCE:-1}"
 HOME_DIR="${PA_ETL_HOME:-$HOME/.pa-etl}"
 BIN="$HOME_DIR/bin/abctl-$ABCTL_VERSION"
 export DO_NOT_TRACK=1
+
+BRANDED="${AIRBYTE_BRANDED:-1}"
+SERVER_IMAGE="${AIRBYTE_SERVER_IMAGE:-ghcr.io/biswa-pa/pa-etl/airbyte-server}"
+
+# Helm values: use the PA ETL Airbyte server image, which has the PA ETL look built into its web UI.
+# Its tag defaults to the chart's app version, and the image is published with that same tag.
+write_values() {
+  mkdir -p "$HOME_DIR"
+  VALUES="$HOME_DIR/airbyte-values.yaml"
+  cat > "$VALUES" <<YAML
+server:
+  image:
+    repository: $SERVER_IMAGE
+YAML
+}
+
+# kind (the cluster inside abctl) needs generous inotify limits. Ubuntu's defaults are low and the
+# install then fails with "too many open files". Warn early with the fix.
+check_linux() {
+  [[ "$(uname -s)" == "Linux" ]] || return 0
+  local inst watches
+  inst="$(sysctl -n fs.inotify.max_user_instances 2>/dev/null || echo 0)"
+  watches="$(sysctl -n fs.inotify.max_user_watches 2>/dev/null || echo 0)"
+  if (( inst < 512 || watches < 524288 )); then
+    echo "Warning: inotify limits are low (instances=$inst, watches=$watches). If the install fails with 'too many open files', run:" >&2
+    echo "  sudo sysctl -w fs.inotify.max_user_instances=1024 fs.inotify.max_user_watches=524288" >&2
+    echo "  (make it permanent: add those two lines to /etc/sysctl.d/99-pa-etl.conf)" >&2
+  fi
+  docker info >/dev/null 2>&1 || echo "Warning: your user cannot talk to Docker. Add it to the docker group (sudo usermod -aG docker \$USER, then log in again)." >&2
+}
 
 need_docker() { docker info >/dev/null 2>&1 || { echo "Docker is not running." >&2; exit 1; }; }
 
@@ -69,12 +102,21 @@ fix_dns() {
 
 case "${1:-}" in
   install)
-    need_docker; ensure_abctl
+    need_docker; ensure_abctl; check_linux
     args=(local install --port "$PORT" --insecure-cookies --no-browser)
     [[ "$LOW" == "1" ]] && args+=(--low-resource-mode)
+    [[ -n "${AIRBYTE_HOST:-}" ]] && args+=(--host "$AIRBYTE_HOST")
+    if [[ "$BRANDED" == "1" ]]; then
+      write_values
+      args+=(--values "$VALUES")
+      echo "Installing with the PA ETL Airbyte server image: $SERVER_IMAGE"
+    fi
     fix_dns &
     "$BIN" "${args[@]}"
     wait
+    # Bring Airbyte back by itself after a reboot or a Docker restart (useful on a server).
+    docker update --restart unless-stopped airbyte-abctl-control-plane >/dev/null 2>&1 \
+      && echo "pa-etl: Airbyte will restart automatically with Docker"
     echo
     echo "Airbyte is on http://localhost:$PORT. Next: scripts/airbyte.sh credentials"
     ;;

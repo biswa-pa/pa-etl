@@ -12,3 +12,17 @@ else
   printf 'auth_basic off;\n' > "$CONF"
   echo "pa-etl: Prefect UI has no password (set PA_ETL_PREFECT_USER and PA_ETL_PREFECT_PASSWORD)"
 fi
+
+# Optional: brand a stock Airbyte at the gateway (not needed with the pa-etl/airbyte-server image).
+BRAND=/etc/nginx/pa-etl-brand-airbyte.conf
+if [ "${AIRBYTE_BRAND_AT_GATEWAY:-false}" = "true" ]; then
+  cat > "$BRAND" <<'NGINX'
+proxy_set_header Accept-Encoding "";
+sub_filter_once off;
+sub_filter_types text/html;
+sub_filter '</head>' '<link rel="stylesheet" href="/__pa/airbyte.css"><script defer src="/__pa/brand.js"></script></head>';
+NGINX
+  echo "pa-etl: branding Airbyte at the gateway"
+else
+  : > "$BRAND"
+fi

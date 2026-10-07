@@ -8,7 +8,8 @@ ENV PA_ETL_PORTAL_HOST=etl.localhost \
     PA_ETL_AIRBYTE_URL=http://connecter.localhost:8080 \
     AIRBYTE_UPSTREAM=host.docker.internal:8000 \
     AIRBYTE_HOST_HEADER=localhost \
-    AIRBYTE_ORIGIN=http://localhost:8000
+    AIRBYTE_ORIGIN=http://localhost:8000 \
+    AIRBYTE_BRAND_AT_GATEWAY=false
 RUN apk add --no-cache openssl
 COPY gateway/30-pa-etl-auth.sh /docker-entrypoint.d/30-pa-etl-auth.sh
 COPY gateway/default.conf.template /etc/nginx/templates/default.conf.template

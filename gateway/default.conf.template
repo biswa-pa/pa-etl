@@ -54,12 +54,6 @@ server {
   server_name ${PA_ETL_PREFECT_HOST};
 
   location /__pa/ { alias /brand/; add_header Cache-Control "no-cache"; }
-  location ~ ^/((v2/)?(favicon(-dark)?\.ico|ico/.+)|favicon(-dark)?\.ico)$ {
-    root /brand;
-    rewrite ^ /icon.png break;
-    types { } default_type image/png;
-  }
-
   location / {
     include /etc/nginx/pa-etl-prefect-auth.conf;
     set $up http://prefect-server:4200;
@@ -72,12 +66,7 @@ server {
     proxy_set_header Connection $connection_upgrade;
     proxy_read_timeout 3600s;
 
-    # Brand the single-page app: theme file, brand script, title.
-    proxy_set_header Accept-Encoding "";
-    sub_filter_once off;
-    sub_filter_types text/html;
-    sub_filter '<title>Prefect Server</title>' '<title>PA ETL &middot; Pipelines</title>';
-    sub_filter '</head>' '<link rel="stylesheet" href="/__pa/prefect.css"><script defer src="/__pa/brand.js"></script></head>';
+    # The pa-etl/prefect image carries its own branding, so nothing is injected here.
   }
 }
 
@@ -100,9 +89,8 @@ server {
     proxy_read_timeout 600s;
     client_max_body_size 100m;
 
-    proxy_set_header Accept-Encoding "";
-    sub_filter_once off;
-    sub_filter_types text/html;
-    sub_filter '</head>' '<link rel="stylesheet" href="/__pa/airbyte.css"><script defer src="/__pa/brand.js"></script></head>';
+    # Only for stock Airbyte: adds the PA ETL theme when AIRBYTE_BRAND_AT_GATEWAY=true. The
+    # pa-etl/airbyte-server image already carries it, so this is empty by default.
+    include /etc/nginx/pa-etl-brand-airbyte.conf;
   }
 }

@@ -34,10 +34,10 @@
   display: block;
   width: 150px;
   height: 36px;
-  background: url(/__pa/logo.svg) left center / contain no-repeat;
+  background: url(logo.svg) left center / contain no-repeat;
 }
 .context-sidebar__logo-icon { display: none !important; }
-.light .context-sidebar__logo-link { background-image: url(/__pa/logo-dark.svg); }
+.light .context-sidebar__logo-link { background-image: url(logo-dark.svg); }
 
 /* ======================================================================
    Prefect V2 UI (/v2/...). It is themed with shadcn-style variables, so the same
