@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 110" width="400" height="110">
+  <g font-family="Poppins, Montserrat, Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="84">
+    <text x="0" y="86" fill="#1a0a22" textLength="104" lengthAdjust="spacingAndGlyphs">PA</text>
+    <svg x="118" y="8" width="94" height="94" viewBox="0 0 64 64"><defs>
+    <linearGradient id="mf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1a52"/><stop offset="1" stop-color="#1a0a22"/></linearGradient>
+    <linearGradient id="mo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb23d"/><stop offset="1" stop-color="#fd9904"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="15" fill="url(#mf)" stroke="url(#mo)" stroke-width="3.2"/>
+  <circle cx="16.500" cy="32" r="4.600" fill="url(#mo)"/>
+  <path d="M21.500 32h4" fill="none" stroke="url(#mo)" stroke-width="3.200" stroke-linecap="round"/>
+  <rect x="27.500" y="26.500" width="11" height="11" rx="2.600" transform="rotate(45 33 32)" fill="none" stroke="url(#mo)" stroke-width="3.200" stroke-linejoin="round"/>
+  <path d="M42 32h8.500M46.500 27.200l4.800 4.800-4.800 4.800" fill="none" stroke="url(#mo)" stroke-width="3.200" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+    <text x="226" y="86" fill="#FD9904" textLength="170" lengthAdjust="spacingAndGlyphs">ETL</text>
+  </g>
+</svg>

@@ -1,0 +1,40 @@
+/* PA ETL theme for the Prefect UI. Prefect colours are CSS variables, so this
+   file only overrides variables plus the sidebar logo. Orange #FD9904, purple-black #1A0A22. */
+:root, .dark, .light { --p-primary-hue: 36; }
+
+.dark {
+  --p-color-bg-0: #1d0e28;
+  --p-color-bg-1: #1a0a22;
+  --p-color-bg-2: #241431;
+  --p-color-bg-3: #2e1b3d;
+  --p-color-button-primary-bg: #fd9904;
+  --p-color-button-primary-bg-hover: #ffb23d;
+  --p-color-button-primary-bg-active: #e48700;
+  --p-color-button-primary-text: #1a0a22;
+  --p-color-focus-ring: #fd9904;
+  --p-color-selected: rgba(253, 153, 4, .18);
+  --p-color-selectable-hover: rgba(253, 153, 4, .10);
+  --p-color-text-link: #ffb23d;
+  --p-color-text-selected: #ffb23d;
+}
+.light {
+  --p-color-button-primary-bg: #fd9904;
+  --p-color-button-primary-bg-hover: #e48700;
+  --p-color-button-primary-bg-active: #cc7900;
+  --p-color-button-primary-text: #ffffff;
+  --p-color-focus-ring: #fd9904;
+  --p-color-selected: rgba(253, 153, 4, .16);
+  --p-color-selectable-hover: rgba(253, 153, 4, .08);
+  --p-color-text-link: #b86e00;
+  --p-color-text-selected: #b86e00;
+}
+
+/* Sidebar logo: hide Prefect's mark, show PA ETL. */
+.context-sidebar__logo-link {
+  display: block;
+  width: 150px;
+  height: 36px;
+  background: url(/__pa/logo.svg) left center / contain no-repeat;
+}
+.context-sidebar__logo-icon { display: none !important; }
+.light .context-sidebar__logo-link { background-image: url(/__pa/logo-dark.svg); }
