@@ -47,12 +47,34 @@ ensure_abctl() {
   echo "abctl $ABCTL_VERSION installed in $HOME_DIR/bin (checksum ok)."
 }
 
+# On Docker Desktop the cluster's DNS can time out on UDP to Docker's resolver, which
+# makes Airbyte's bootloader fail with "UnknownHostException: connectors.airbyte.com".
+# Sending CoreDNS's upstream lookups over TCP fixes it. Runs beside the install and
+# patches CoreDNS as soon as the cluster exists. Uses kubectl inside the cluster
+# node, so nothing extra is needed on the host.
+fix_dns() {
+  local node=airbyte-abctl-control-plane k="kubectl --kubeconfig=/etc/kubernetes/admin.conf -n kube-system"
+  for _ in $(seq 1 180); do
+    docker exec "$node" $k get cm coredns >/dev/null 2>&1 && break
+    sleep 5
+  done
+  docker exec "$node" sh -c "
+    $k get cm coredns -o jsonpath='{.data.Corefile}' > /tmp/Corefile
+    grep -q force_tcp /tmp/Corefile && exit 0
+    sed -i 's|max_concurrent 1000|max_concurrent 1000\n       force_tcp|' /tmp/Corefile
+    $k create cm coredns --from-file=Corefile=/tmp/Corefile --dry-run=client -o yaml | $k replace -f -
+    $k rollout restart deploy/coredns" >/dev/null 2>&1 \
+    && echo "pa-etl: CoreDNS set to use TCP upstream (Docker Desktop DNS workaround)"
+}
+
 case "${1:-}" in
   install)
     need_docker; ensure_abctl
     args=(local install --port "$PORT" --insecure-cookies --no-browser)
     [[ "$LOW" == "1" ]] && args+=(--low-resource-mode)
+    fix_dns &
     "$BIN" "${args[@]}"
+    wait
     echo
     echo "Airbyte is on http://localhost:$PORT. Next: scripts/airbyte.sh credentials"
     ;;

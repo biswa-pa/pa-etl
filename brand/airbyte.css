@@ -1,0 +1,123 @@
+/* PA ETL theme for the Airbyte UI. Airbyte's colours are CSS variables:
+   --color-blue-*       the accent (indigo) -> orange #FD9904
+   --color-dark-blue-*  text and dark surfaces (navy) -> purple-black #1A0A22
+   Airbyte defines these on .airbyteThemeLight / .airbyteThemeDark and loads its CSS after
+   this file, so the selectors are doubled to outrank it.
+   Re-check after an Airbyte upgrade; this styles an app we do not build. */
+:root:root:root,
+.airbyteThemeLight.airbyteThemeLight,
+.airbyteThemeDark.airbyteThemeDark {
+  --color-grey-50: #f5f1f9;
+  --color-grey-100: #e8dff0;
+  --color-grey-200: #dcd0e8;
+  --color-blue-30: hsl(36, 100%, 98%);
+  --color-blue-40: hsl(36, 100%, 96%);
+  --color-blue-50: hsl(36, 100%, 94%);
+  --color-blue-100: hsl(36, 100%, 85%);
+  --color-blue-200: hsl(36, 100%, 75%);
+  --color-blue-300: hsl(36, 100%, 66%);
+  --color-blue-400: hsl(36, 98%, 50%);
+  --color-blue-500: hsl(34, 98%, 46%);
+  --color-blue-600: hsl(32, 100%, 42%);
+  --color-blue-700: hsl(30, 100%, 37%);
+  --color-blue-800: hsl(28, 100%, 31%);
+  --color-blue-900: hsl(26, 100%, 26%);
+
+  --color-dark-blue-30: hsl(283, 30%, 98%);
+  --color-dark-blue-40: hsl(283, 24%, 95%);
+  --color-dark-blue-50: hsl(283, 22%, 92%);
+  --color-dark-blue-100: hsl(283, 25%, 80%);
+  --color-dark-blue-200: hsl(283, 23%, 67%);
+  --color-dark-blue-300: hsl(283, 23%, 56%);
+  --color-dark-blue-400: hsl(283, 26%, 46%);
+  --color-dark-blue-500: hsl(283, 38%, 37%);
+  --color-dark-blue-600: hsl(283, 40%, 30%);
+  --color-dark-blue-700: hsl(283, 43%, 24%);
+  --color-dark-blue-800: hsl(283, 45%, 17%);
+  --color-dark-blue-900: hsl(283, 55%, 9%);
+  --color-dark-blue-1000: hsl(283, 55%, 6%);
+}
+
+/* Airbyte's logo on the setup and sign-in pages. */
+img[src$="/logo.png"], img[src="/logo.png"] {
+  content: url(/__pa/logo-dark.svg);
+  width: 190px !important;
+  height: auto !important;
+}
+
+/* ======================================================================
+   Layout polish. Airbyte's class names carry a build hash, so these match
+   on the stable part only ([class*="Module-module__name"]).
+   Same look as the Prefect V2 UI: dark purple sidebar, soft page, orange accents.
+   ====================================================================== */
+
+/* Page */
+body,
+body [class*="MainLayout-module__content"] { background: #f5f1f9; }
+body [class*="Heading-module__heading--lg"] { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
+
+/* Sidebar: dark purple. Re-mapping the colour variables inside it lightens every
+   label and icon that uses them. */
+body [class*="SideBar-module__sidebar__"]:not([class*="__logout"]):not([class*="__user"]):not([class*="__section"]):not([class*="__tooltip"]) {
+  background: #1a0a22;
+  border-right: 1px solid #2e1b3d;
+  --color-foreground: #1a0a22;
+  --color-dark-blue-900: #f4eefa;
+  --color-dark-blue-800: #ece3f5;
+  --color-dark-blue-600: #d9ceeb;
+  --color-dark-blue-400: #cdbfe0;
+  --color-grey-100: #2e1b3d;
+  --color-grey-200: #3a2450;
+  --color-grey-300: #a99bbd;
+  --color-grey-400: #bfb1d2;
+  --color-grey-500: #cdbfe0;
+  --color-grey-600: #d9ceeb;
+}
+body [class*="NavItem-module__menuItem"] { border-radius: 10px; transition: background-color .15s; }
+body [class*="NavItem-module__menuItem"]:hover { background: rgba(255, 255, 255, .07); }
+body [class*="NavItem-module__active"],
+body [class*="NavItem-module__active"]:hover {
+  background: rgba(253, 153, 4, .16);
+  box-shadow: inset 3px 0 0 #fd9904;
+}
+body [class*="NavItem-module__active"] p { color: #ffb23d; font-weight: 600; }
+
+/* Connector cards (Set up a new source / destination) */
+body [class*="ConnectorList-module__connectorGrid"] { gap: 14px; }
+body [class*="ConnectorButton-module__button"] {
+  background: #fff;
+  border: 1px solid #e6dcef;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(26, 10, 34, .04);
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+body [class*="ConnectorButton-module__button"]:hover {
+  border-color: #fd9904;
+  box-shadow: 0 10px 26px -12px rgba(253, 153, 4, .55);
+  transform: translateY(-2px);
+}
+
+/* Search and form fields */
+body [class*="Input-module__container"] {
+  border-radius: 12px;
+  border-color: #e2d9ec;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+body [class*="SearchInput-module__searchInput__input"] { font-size: 15px; }
+body [class*="Input-module__container"]:focus-within {
+  border-color: #fd9904;
+  box-shadow: 0 0 0 4px rgba(253, 153, 4, .18);
+}
+
+/* Tabs */
+body [class*="ButtonTab-module__tabContainer"] { border-radius: 10px 10px 0 0; transition: background-color .15s; }
+body [class*="ButtonTab-module__tabContainer--active"] { box-shadow: inset 0 -3px 0 #fd9904; }
+body [class*="ButtonTab-module__tabContainer--inactive"]:hover { background: rgba(253, 153, 4, .08); }
+
+/* Buttons */
+body [class*="Button-module__button--primary"] {
+  border-radius: 10px;
+  box-shadow: 0 6px 16px -8px rgba(253, 153, 4, .8);
+}
+body ::selection { background: rgba(253, 153, 4, .3); }

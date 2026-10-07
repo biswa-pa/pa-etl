@@ -38,3 +38,96 @@
 }
 .context-sidebar__logo-icon { display: none !important; }
 .light .context-sidebar__logo-link { background-image: url(/__pa/logo-dark.svg); }
+
+/* ======================================================================
+   Prefect V2 UI (/v2/...). It is themed with shadcn-style variables, so the same
+   approach applies: swap the variables, then a little polish.
+   Light mode: soft purple-grey page, white cards, dark purple sidebar.
+   Dark mode:  purple-black throughout. Orange #FD9904 is the accent in both.
+   ====================================================================== */
+:root:root {
+  --background: #f5f1f9;
+  --foreground: #1a0a22;
+  --card: #ffffff;
+  --card-foreground: #1a0a22;
+  --popover: #ffffff;
+  --popover-foreground: #1a0a22;
+  --primary: #fd9904;
+  --primary-foreground: #1a0a22;
+  --secondary: #efe8f6;
+  --secondary-foreground: #2e1b3d;
+  --muted: #efe8f6;
+  --muted-foreground: #6f5f82;
+  --accent: #f3ecfa;
+  --accent-foreground: #2e1b3d;
+  --border: #e2d9ec;
+  --input: #d6cae3;
+  --ring: #fd9904;
+  --link: #b86e00;
+  --link-hover: #e48700;
+  --radius: 0.75rem;
+  --chart-1: #fd9904;
+  --chart-2: #8b5cf6;
+  --chart-3: #2dd4bf;
+  --chart-4: #f472b6;
+  --chart-5: #38bdf8;
+
+  /* The sidebar stays dark in both modes. */
+  --sidebar-background: #1a0a22;
+  --sidebar-foreground: #e9dff3;
+  --sidebar-primary: #fd9904;
+  --sidebar-primary-foreground: #1a0a22;
+  --sidebar-accent: #2e1b3d;
+  --sidebar-accent-foreground: #ffb23d;
+  --sidebar-border: #2e1b3d;
+  --sidebar-ring: #fd9904;
+}
+.dark:root, :root .dark, .dark {
+  --background: #150a1d;
+  --foreground: #f4eefa;
+  --card: #1f1229;
+  --card-foreground: #f4eefa;
+  --popover: #1f1229;
+  --popover-foreground: #f4eefa;
+  --primary: #fd9904;
+  --primary-foreground: #1a0a22;
+  --secondary: #2a1a38;
+  --secondary-foreground: #f4eefa;
+  --muted: #2a1a38;
+  --muted-foreground: #b6a6c8;
+  --accent: #2a1a38;
+  --accent-foreground: #f4eefa;
+  --border: #3a2450;
+  --input: #3a2450;
+  --ring: #fd9904;
+  --link: #ffb23d;
+  --link-hover: #ffc873;
+  --sidebar-background: #10061a;
+}
+
+/* Cards: a little depth instead of flat boxes. */
+.bg-card {
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(26, 10, 34, .05), 0 8px 24px -12px rgba(26, 10, 34, .18);
+}
+.dark .bg-card { box-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5); }
+
+/* Sidebar: clear active item with an orange edge, calmer hover. */
+[data-sidebar="menu-button"] { border-radius: .6rem; transition: background-color .15s, color .15s; }
+[data-sidebar="menu-button"][data-active="true"] {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+  box-shadow: inset 3px 0 0 #fd9904;
+  font-weight: 600;
+}
+[data-sidebar="menu-button"]:hover { background: rgba(255, 255, 255, .06); }
+[data-sidebar="header"] { padding-bottom: .5rem; }
+
+/* Page chrome. */
+h1, h2 { letter-spacing: -.01em; }
+::selection { background: rgba(253, 153, 4, .35); }
+* { scrollbar-width: thin; scrollbar-color: #b9a8cc transparent; }
+
+/* Remove the Prefect Cloud upsell: sidebar row and the dashboard banner. */
+li[data-sidebar="menu-item"]:has(a[href*="prefect.io/cloud-vs-oss"]),
+.bg-card:has(a[href*="prefect.io/cloud-vs-oss"]) { display: none !important; }

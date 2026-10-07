@@ -34,7 +34,7 @@ services:
     command: prefect server start --host 0.0.0.0 --port 4200
     environment:
       PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://prefect:${POSTGRES_PASSWORD:-pa-etl-change-me}@postgres:5432/prefect
-      PREFECT_UI_API_URL: ${PA_ETL_PREFECT_URL:-http://prefect.localhost:8080}/api
+      PREFECT_UI_API_URL: ${PA_ETL_PREFECT_URL:-http://pipeline.localhost:8080}/api
       PREFECT_API_URL: http://localhost:4200/api
     depends_on:
       postgres: { condition: service_healthy }
@@ -79,13 +79,14 @@ services:
       dockerfile: gateway/Dockerfile
     environment:
       PA_ETL_PORTAL_HOST: ${PA_ETL_PORTAL_HOST:-etl.localhost}
-      PA_ETL_PREFECT_HOST: ${PA_ETL_PREFECT_HOST:-prefect.localhost}
-      PA_ETL_AIRBYTE_HOST: ${PA_ETL_AIRBYTE_HOST:-airbyte.localhost}
+      PA_ETL_PREFECT_HOST: ${PA_ETL_PREFECT_HOST:-pipeline.localhost}
+      PA_ETL_AIRBYTE_HOST: ${PA_ETL_AIRBYTE_HOST:-connecter.localhost}
       PA_ETL_PORTAL_URL: ${PA_ETL_PORTAL_URL:-http://etl.localhost:8080}
-      PA_ETL_PREFECT_URL: ${PA_ETL_PREFECT_URL:-http://prefect.localhost:8080}
-      PA_ETL_AIRBYTE_URL: ${PA_ETL_AIRBYTE_URL:-http://airbyte.localhost:8080}
+      PA_ETL_PREFECT_URL: ${PA_ETL_PREFECT_URL:-http://pipeline.localhost:8080}
+      PA_ETL_AIRBYTE_URL: ${PA_ETL_AIRBYTE_URL:-http://connecter.localhost:8080}
       AIRBYTE_UPSTREAM: ${AIRBYTE_UPSTREAM:-host.docker.internal:8000}
       AIRBYTE_HOST_HEADER: ${AIRBYTE_HOST_HEADER:-localhost}
+      AIRBYTE_ORIGIN: ${AIRBYTE_ORIGIN:-http://localhost:8000}
       PA_ETL_PREFECT_USER: ${PA_ETL_PREFECT_USER:-}
       PA_ETL_PREFECT_PASSWORD: ${PA_ETL_PREFECT_PASSWORD:-}
     extra_hosts:
