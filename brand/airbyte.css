@@ -4,12 +4,14 @@
    Airbyte defines these on .airbyteThemeLight / .airbyteThemeDark and loads its CSS after
    this file, so the selectors are doubled to outrank it.
    Re-check after an Airbyte upgrade; this styles an app we do not build. */
+/* Light theme */
 :root:root:root,
-.airbyteThemeLight.airbyteThemeLight,
-.airbyteThemeDark.airbyteThemeDark {
+.airbyteThemeLight.airbyteThemeLight {
+  --color-backdrop: #f5f1f9;
   --color-grey-50: #f5f1f9;
   --color-grey-100: #e8dff0;
   --color-grey-200: #dcd0e8;
+
   --color-blue-30: hsl(36, 100%, 98%);
   --color-blue-40: hsl(36, 100%, 96%);
   --color-blue-50: hsl(36, 100%, 94%);
@@ -38,6 +40,29 @@
   --color-dark-blue-1000: hsl(283, 55%, 6%);
 }
 
+/* Dark theme: Airbyte inverts its scales (light text, dark surfaces), so this uses its own
+   direction: dark purple surfaces, orange accents that get lighter, text left as Airbyte has it. */
+.airbyteThemeDark.airbyteThemeDark {
+  --color-backdrop: #150a1d;
+  --color-foreground: #1f1229;
+  --color-grey-50: hsl(283, 25%, 15%);
+  --color-grey-100: hsl(283, 22%, 20%);
+  --color-grey-200: hsl(283, 20%, 26%);
+
+  --color-blue-30: hsl(283, 35%, 13%);
+  --color-blue-40: hsl(283, 35%, 15%);
+  --color-blue-50: hsl(283, 30%, 19%);
+  --color-blue-100: hsl(30, 45%, 28%);
+  --color-blue-200: hsl(33, 70%, 38%);
+  --color-blue-300: hsl(35, 90%, 45%);
+  --color-blue-400: hsl(36, 98%, 50%);
+  --color-blue-500: hsl(36, 98%, 58%);
+  --color-blue-600: hsl(36, 98%, 64%);
+  --color-blue-700: hsl(36, 98%, 70%);
+  --color-blue-800: hsl(36, 98%, 76%);
+  --color-blue-900: hsl(36, 98%, 82%);
+}
+
 /* Airbyte's logo on the setup and sign-in pages. */
 img[src$="/logo.png"], img[src="/logo.png"] {
   content: url(/__pa/logo-dark.svg);
@@ -52,8 +77,7 @@ img[src$="/logo.png"], img[src="/logo.png"] {
    ====================================================================== */
 
 /* Page */
-body,
-body [class*="MainLayout-module__content"] { background: #f5f1f9; }
+body { background: var(--color-backdrop); }
 body [class*="Heading-module__heading--lg"] { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
 
 /* Sidebar: dark purple. Re-mapping the colour variables inside it lightens every
@@ -75,18 +99,18 @@ body [class*="SideBar-module__sidebar__"]:not([class*="__logout"]):not([class*="
 }
 body [class*="NavItem-module__menuItem"] { border-radius: 10px; transition: background-color .15s; }
 body [class*="NavItem-module__menuItem"]:hover { background: rgba(255, 255, 255, .07); }
-body [class*="NavItem-module__active"],
-body [class*="NavItem-module__active"]:hover {
+body [class*="NavItem-module__menuItem"][class*="NavItem-module__active"],
+body [class*="NavItem-module__menuItem"][class*="NavItem-module__active"]:hover {
   background: rgba(253, 153, 4, .16);
   box-shadow: inset 3px 0 0 #fd9904;
 }
-body [class*="NavItem-module__active"] p { color: #ffb23d; font-weight: 600; }
+body [class*="NavItem-module__menuItem"][class*="NavItem-module__active"] p { color: #ffb23d; font-weight: 600; }
 
 /* Connector cards (Set up a new source / destination) */
 body [class*="ConnectorList-module__connectorGrid"] { gap: 14px; }
 body [class*="ConnectorButton-module__button"] {
-  background: #fff;
-  border: 1px solid #e6dcef;
+  background: var(--color-foreground);
+  border: 1px solid var(--color-grey-100);
   border-radius: 14px;
   box-shadow: 0 1px 2px rgba(26, 10, 34, .04);
   transition: border-color .15s, box-shadow .15s, transform .15s;
@@ -100,8 +124,8 @@ body [class*="ConnectorButton-module__button"]:hover {
 /* Search and form fields */
 body [class*="Input-module__container"] {
   border-radius: 12px;
-  border-color: #e2d9ec;
-  background: #fff;
+  border-color: var(--color-grey-200);
+  background: var(--color-foreground);
   transition: border-color .15s, box-shadow .15s;
 }
 body [class*="SearchInput-module__searchInput__input"] { font-size: 15px; }
