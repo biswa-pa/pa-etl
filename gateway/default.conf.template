@@ -1,0 +1,102 @@
+# PA ETL gateway. One entry for the portal, the Prefect UI and the Airbyte UI,
+# routed by host name. The nginx image fills the ${...} values from the
+# environment at start; nginx's own $variables are left alone.
+#
+# Local defaults:  etl.localhost / prefect.localhost / airbyte.localhost on port 8080.
+# Production: point three DNS names at the gateway and put TLS in front of it.
+
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+map $http_upgrade $connection_upgrade { default upgrade; "" close; }
+
+# Assets shared by every host: logo, icons, theme files.
+# (Included in each server block below.)
+
+server {
+  listen 80 default_server;
+  server_name ${PA_ETL_PORTAL_HOST};
+
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location = /config.json {
+    default_type application/json;
+    add_header Cache-Control "no-store";
+    return 200 '{"brand":"PA ETL","prefect":"${PA_ETL_PREFECT_URL}","airbyte":"${PA_ETL_AIRBYTE_URL}"}';
+  }
+
+  # Health of each app, so the portal can show it without cross-site calls.
+  location = /status/prefect {
+    set $up http://prefect-server:4200;
+    proxy_pass $up/api/health;
+    proxy_connect_timeout 3s;
+    proxy_read_timeout 5s;
+  }
+  location = /status/airbyte {
+    set $up http://${AIRBYTE_UPSTREAM};
+    proxy_pass $up/api/v1/health;
+    proxy_set_header Host ${AIRBYTE_HOST_HEADER};
+    proxy_connect_timeout 3s;
+    proxy_read_timeout 5s;
+  }
+
+  location /__pa/ { alias /brand/; add_header Cache-Control "no-cache"; }
+  location = /favicon.ico { alias /brand/icon.png; types { } default_type image/png; }
+}
+
+server {
+  listen 80;
+  server_name ${PA_ETL_PREFECT_HOST};
+
+  location /__pa/ { alias /brand/; add_header Cache-Control "no-cache"; }
+  location ~ ^/(favicon(-dark)?\.ico|ico/.+)$ {
+    root /brand;
+    rewrite ^ /icon.png break;
+    types { } default_type image/png;
+  }
+
+  location / {
+    include /etc/nginx/pa-etl-prefect-auth.conf;
+    set $up http://prefect-server:4200;
+    proxy_pass $up;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_read_timeout 3600s;
+
+    # Brand the single-page app: theme file, brand script, title.
+    proxy_set_header Accept-Encoding "";
+    sub_filter_once off;
+    sub_filter_types text/html;
+    sub_filter '<title>Prefect Server</title>' '<title>PA ETL &middot; Pipelines</title>';
+    sub_filter '</head>' '<link rel="stylesheet" href="/__pa/prefect.css"><script defer src="/__pa/brand.js"></script></head>';
+  }
+}
+
+server {
+  listen 80;
+  server_name ${PA_ETL_AIRBYTE_HOST};
+
+  location /__pa/ { alias /brand/; add_header Cache-Control "no-cache"; }
+
+  location / {
+    set $up http://${AIRBYTE_UPSTREAM};
+    proxy_pass $up;
+    proxy_http_version 1.1;
+    proxy_set_header Host ${AIRBYTE_HOST_HEADER};
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_read_timeout 600s;
+    client_max_body_size 100m;
+
+    proxy_set_header Accept-Encoding "";
+    sub_filter_once off;
+    sub_filter_types text/html;
+    sub_filter '</head>' '<link rel="stylesheet" href="/__pa/airbyte.css"><script defer src="/__pa/brand.js"></script></head>';
+  }
+}

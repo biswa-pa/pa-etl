@@ -1,0 +1,100 @@
+# PA ETL: Prefect (pipelines) + the PA ETL gateway/portal, with Airbyte (data sync) alongside.
+#
+#   docker compose up -d                 Prefect, the gateway and the portal
+#   scripts/airbyte.sh install           Airbyte (runs in its own small Kubernetes via abctl)
+#   open http://etl.localhost:8080
+#
+# Settings (all optional) go in .env, see .env.example.
+# Images come from PA_IMAGE_PREFIX if published there, otherwise they are built from this repo.
+name: ${PA_PROJECT:-pa-etl}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: prefect
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pa-etl-change-me}
+      POSTGRES_DB: prefect
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prefect -d prefect"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  prefect-server:
+    image: ${PA_IMAGE_PREFIX:-pa-etl}/prefect:${PA_VERSION:-1.0.0}
+    build:
+      context: .
+      dockerfile: prefect/Dockerfile
+      args:
+        PREFECT_TAG: ${PREFECT_TAG:-3.8.8-python3.12}
+    command: prefect server start --host 0.0.0.0 --port 4200
+    environment:
+      PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://prefect:${POSTGRES_PASSWORD:-pa-etl-change-me}@postgres:5432/prefect
+      PREFECT_UI_API_URL: ${PA_ETL_PREFECT_URL:-http://prefect.localhost:8080}/api
+      PREFECT_API_URL: http://localhost:4200/api
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:4200/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  # One-shot: creates the work pool and registers the example deployments.
+  prefect-deploy:
+    image: ${PA_IMAGE_PREFIX:-pa-etl}/prefect:${PA_VERSION:-1.0.0}
+    command: pa-etl-deploy
+    environment:
+      PREFECT_API_URL: http://prefect-server:4200/api
+      PA_ETL_WORK_POOL: ${PA_ETL_WORK_POOL:-pa-etl}
+    depends_on:
+      prefect-server: { condition: service_healthy }
+    restart: "no"
+
+  # Runs the flows. Mount your own flows over /opt/pa-etl/flows to use them.
+  prefect-worker:
+    image: ${PA_IMAGE_PREFIX:-pa-etl}/prefect:${PA_VERSION:-1.0.0}
+    command: prefect worker start --pool ${PA_ETL_WORK_POOL:-pa-etl} --type process
+    environment:
+      PREFECT_API_URL: http://prefect-server:4200/api
+      AIRBYTE_URL: ${AIRBYTE_URL:-http://host.docker.internal:8000}
+      AIRBYTE_CLIENT_ID: ${AIRBYTE_CLIENT_ID:-}
+      AIRBYTE_CLIENT_SECRET: ${AIRBYTE_CLIENT_SECRET:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      prefect-deploy: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  gateway:
+    image: ${PA_IMAGE_PREFIX:-pa-etl}/gateway:${PA_VERSION:-1.0.0}
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      PA_ETL_PORTAL_HOST: ${PA_ETL_PORTAL_HOST:-etl.localhost}
+      PA_ETL_PREFECT_HOST: ${PA_ETL_PREFECT_HOST:-prefect.localhost}
+      PA_ETL_AIRBYTE_HOST: ${PA_ETL_AIRBYTE_HOST:-airbyte.localhost}
+      PA_ETL_PORTAL_URL: ${PA_ETL_PORTAL_URL:-http://etl.localhost:8080}
+      PA_ETL_PREFECT_URL: ${PA_ETL_PREFECT_URL:-http://prefect.localhost:8080}
+      PA_ETL_AIRBYTE_URL: ${PA_ETL_AIRBYTE_URL:-http://airbyte.localhost:8080}
+      AIRBYTE_UPSTREAM: ${AIRBYTE_UPSTREAM:-host.docker.internal:8000}
+      AIRBYTE_HOST_HEADER: ${AIRBYTE_HOST_HEADER:-localhost}
+      PA_ETL_PREFECT_USER: ${PA_ETL_PREFECT_USER:-}
+      PA_ETL_PREFECT_PASSWORD: ${PA_ETL_PREFECT_PASSWORD:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${PA_ETL_PORT:-8080}:80"
+    depends_on:
+      prefect-server: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
