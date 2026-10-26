@@ -1,0 +1,136 @@
+@import url("apps.css");
+/* PA ETL theme for the Cube playground. Ant Design class names are stable;
+   styled-component hashes are not, so those accents are repainted from brand.js.
+   Orange #fd9904, purple-black #1a0a22, soft page #f5f1f9. */
+body {
+  background: #f5f1f9 !important;
+  color: #1a0a22;
+  padding-top: 0 !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.ant-layout,
+.ant-layout-content { background: #f5f1f9 !important; }
+
+.ant-layout-header {
+  background: #1a0a22 !important;
+  border-bottom: 2px solid #fd9904;
+  line-height: 48px;
+}
+.ant-layout-header img[src*="cube"] { display: none !important; }
+#pa-etl-header-logo {
+  float: left;
+  display: flex;
+  align-items: center;
+  height: 48px;
+  margin-right: 22px;
+}
+#pa-etl-header-logo img { height: 26px; width: auto; display: block; }
+
+.ant-menu-horizontal {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  color: #f4eefa !important;
+}
+.ant-menu-horizontal > .ant-menu-item,
+.ant-menu-horizontal > .ant-menu-submenu,
+.ant-menu-horizontal .ant-menu-title-content,
+.ant-menu-horizontal .ant-menu-title-content a,
+.ant-menu-horizontal > .ant-menu-item a {
+  color: #f4eefa !important;
+}
+.ant-menu-horizontal > .ant-menu-item-selected,
+.ant-menu-horizontal > .ant-menu-item-selected a,
+.ant-menu-horizontal > .ant-menu-item-active,
+.ant-menu-horizontal > .ant-menu-item:hover,
+.ant-menu-horizontal > .ant-menu-item-selected .ant-menu-title-content,
+.ant-menu-horizontal > .ant-menu-item:hover .ant-menu-title-content a {
+  color: #fd9904 !important;
+  background: transparent !important;
+  border-bottom-color: #fd9904 !important;
+}
+.ant-menu-horizontal > .ant-menu-item::after,
+.ant-menu-horizontal > .ant-menu-item-selected::after {
+  border-bottom-color: #fd9904 !important;
+}
+
+/* Slack, docs and the Cube Cloud signup are the open-source chrome. */
+a[href*="slack.cube"],
+a[href*="cube.dev"],
+a[href*="cubecloud"] { display: none !important; }
+
+.ant-btn-primary,
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background: #fd9904 !important;
+  border-color: #fd9904 !important;
+  color: #1a0a22 !important;
+  box-shadow: none !important;
+}
+.ant-tabs-ink-bar { background: #fd9904 !important; }
+.pa-accent,
+.pa-accent::before,
+.pa-accent::after {
+  color: #b86e00 !important;
+  border-bottom-color: #fd9904 !important;
+  background-color: transparent;
+}
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { color: #1a0a22 !important; }
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  background: #1a0a22 !important;
+  border-color: #1a0a22 !important;
+  color: #fd9904 !important;
+}
+.ant-card {
+  background: #fff !important;
+  border-color: #e2d9ec !important;
+}
+a { color: #b86e00; }
+a:hover { color: #e48700; }
+
+/* Overview page shown instead of the Cube Cloud pitch. */
+#pa-etl-overview {
+  max-width: 720px;
+  margin: 48px auto;
+  padding: 8px 24px 40px;
+  color: #1a0a22;
+}
+#pa-etl-overview .eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #fd9904;
+}
+#pa-etl-overview h1 {
+  margin: 0 0 12px;
+  font-size: 40px;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  color: #1a0a22;
+}
+#pa-etl-overview p {
+  margin: 0 0 28px;
+  max-width: 560px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: #6f5f82;
+}
+#pa-etl-overview .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+#pa-etl-overview .actions a {
+  display: inline-flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+}
+#pa-etl-overview .actions a.primary { background: #fd9904; color: #1a0a22; }
+#pa-etl-overview .actions a.primary:hover { background: #ffb23d; color: #1a0a22; }
+#pa-etl-overview .actions a.quiet {
+  background: #fff;
+  color: #1a0a22;
+  border: 1px solid #e2d9ec;
+}
+#pa-etl-overview .actions a.quiet:hover { border-color: #fd9904; color: #1a0a22; }

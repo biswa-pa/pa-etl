@@ -35,7 +35,8 @@
 
   // Upgrade-safe frame: it does not depend on the app's own class names.
   function frame() {
-    if (APP !== "cube" && APP !== "clickhouse") return;
+    // Cube has its own header, which is restyled into the PA ETL bar.
+    if (APP !== "clickhouse") return;
     if (document.getElementById("pa-etl-bar")) return;
     var bar = document.createElement("div");
     bar.id = "pa-etl-bar";
@@ -202,6 +203,97 @@
     });
   }
 
+  // Cube's accent is a fixed indigo. Styled-component class names change every
+  // upgrade, so matching the colour is what keeps the orange after an upgrade.
+  function accentAlpha(color) {
+    var m = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/.exec(color || "");
+    if (!m) return -1;
+    var key = m[1] + "," + m[2] + "," + m[3];
+    if (key !== "122,119,255" && key !== "102,93,232") return -1;
+    return m[4] == null ? 1 : parseFloat(m[4]);
+  }
+
+  function paintCube(el) {
+    if (!el || el.nodeType !== 1 || el.id === "pa-etl-bar" || el.id === "pa-etl-overview") return;
+    var cs;
+    try { cs = getComputedStyle(el); } catch (e) { return; }
+    var bg = accentAlpha(cs.backgroundColor);
+    if (bg > 0.6) {
+      el.style.setProperty("background-color", "#fd9904", "important");
+      el.style.setProperty("border-color", "#e48700", "important");
+      el.style.setProperty("color", "#1a0a22", "important");
+    } else if (bg > 0) {
+      el.style.setProperty("background-color", "rgba(253, 153, 4, .16)", "important");
+      el.style.setProperty("color", "#1a0a22", "important");
+    }
+    if (accentAlpha(cs.borderBottomColor) > 0.6 || accentAlpha(cs.color) > 0.6) {
+      el.classList.add("pa-accent");
+      el.style.setProperty("color", "#b86e00", "important");
+      el.style.setProperty("border-bottom-color", "#fd9904", "important");
+    }
+  }
+
+  function cubeHeader() {
+    if (APP !== "cube") return;
+    var header = document.querySelector(".ant-layout-header");
+    if (header && !header.querySelector("#pa-etl-header-logo")) {
+      var home = document.createElement("a");
+      home.id = "pa-etl-header-logo";
+      home.href = PORTAL;
+      home.innerHTML = '<img alt="PA ETL" src="' + BASE + 'logo.svg">';
+      header.insertBefore(home, header.firstChild);
+    }
+    document.querySelectorAll(".ant-menu a").forEach(function (a) {
+      if ((a.textContent || "").replace(/\s+/g, " ").trim() === "Cube BI") a.textContent = "Overview";
+    });
+    document.querySelectorAll("a, button").forEach(function (el) {
+      var t = (el.textContent || "").replace(/\s+/g, " ").trim();
+      if (t === "Run in Cloud" || t === "Slack" || t === "Docs") el.style.setProperty("display", "none", "important");
+    });
+    document.querySelectorAll("button, a, span, div").forEach(paintCube);
+  }
+
+  function cubeOverview() {
+    if (APP !== "cube") return;
+    var main = document.querySelector("main");
+    if (!main) return;
+    var on = /cube-bi/.test(location.hash);
+    var panel = document.getElementById("pa-etl-overview");
+    if (!on) {
+      if (panel) panel.remove();
+      main.querySelectorAll("[data-pa-overview-hidden]").forEach(function (el) {
+        el.style.display = "";
+        el.removeAttribute("data-pa-overview-hidden");
+      });
+      return;
+    }
+    Array.prototype.forEach.call(main.children, function (el) {
+      if (el.id === "pa-etl-overview") return;
+      el.setAttribute("data-pa-overview-hidden", "1");
+      el.style.setProperty("display", "none", "important");
+    });
+    if (panel) return;
+    panel = document.createElement("section");
+    panel.id = "pa-etl-overview";
+    panel.innerHTML =
+      '<p class="eyebrow">Semantic layer</p>' +
+      '<h1>Ask the warehouse a question</h1>' +
+      '<p>Choose measures and dimensions in the playground, or open the data model. The answers come from the PA ETL warehouse.</p>' +
+      '<div class="actions"><a class="primary" href="#/build">Open Playground</a><a class="quiet" href="#/schema">Open Data Model</a></div>';
+    main.appendChild(panel);
+  }
+
+  function clickhouseBrand() {
+    if (APP !== "clickhouse") return;
+    var logo = document.querySelector("#logo-container a");
+    if (logo && logo.getAttribute("href") !== PORTAL) {
+      logo.href = PORTAL;
+      logo.removeAttribute("target");
+    }
+    var gh = document.getElementById("github-icon");
+    if (gh) gh.style.display = "none";
+  }
+
   // --- Wiring -------------------------------------------------------------------
   var pending = [];
   var queued = false;
@@ -213,6 +305,9 @@
     for (var i = 0; i < batch.length; i++) walk(batch[i]);
     title();
     frame();
+    cubeHeader();
+    cubeOverview();
+    clickhouseBrand();
     prefectV2();
     airbyteSidebarLogo();
     airbyteLoginLogo();
@@ -233,6 +328,10 @@
   function start() {
     walk(document.body);
     frame();
+    cubeHeader();
+    cubeOverview();
+    clickhouseBrand();
+    window.addEventListener("hashchange", function () { schedule(null); });
     prefectV2();
     airbyteSidebarLogo();
     airbyteLoginLogo();

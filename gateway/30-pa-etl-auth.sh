@@ -21,13 +21,15 @@ write_brand() {
   case "$1" in
     prefect) css="/__pa/prefect.css" ;;
     airbyte) css="/__pa/airbyte.css" ;;
+    cube) css="/__pa/cube.css" ;;
+    clickhouse) css="/__pa/clickhouse.css" ;;
   esac
   portal=$(printf '%s' "${PA_ETL_PORTAL_URL:-http://etl.localhost:8080}" | sed 's/"/%22/g')
   cat > "$2" <<NGINX
 proxy_set_header Accept-Encoding "";
 sub_filter_once off;
 sub_filter_types text/html;
-sub_filter '</head>' '<link rel="stylesheet" href="${css}"><script defer src="/__pa/brand.js?app=${1}&portal=${portal}"></script></head>';
+sub_filter '</head>' '<link rel="stylesheet" href="${css}?v=3"><script defer src="/__pa/brand.js?v=3&app=${1}&portal=${portal}"></script></head>';
 NGINX
 }
 

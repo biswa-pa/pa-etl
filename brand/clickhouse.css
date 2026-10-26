@@ -1,0 +1,75 @@
+@import url("apps.css");
+/* PA ETL theme for the ClickHouse query UI. The page themes itself with
+   custom properties, so an upgrade keeps this look as long as those names stay. */
+html,
+body,
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  --background-color: #f5f1f9 !important;
+  --element-background-color: #ffffff !important;
+  --button-color: #fd9904 !important;
+  --button-active-color: #e48700 !important;
+  --button-text-color: #1a0a22 !important;
+  --button-active-text-color: #1a0a22 !important;
+  --text-color: #1a0a22 !important;
+  --text-color-active: #1a0a22 !important;
+  --border-color: #e2d9ec !important;
+  --table-header-color: #efe8f6 !important;
+  --menu-icon-color: #fd9904 !important;
+  --menu-toggle-color: #f4eefa !important;
+  --link-color: #b86e00 !important;
+  --logo-color: #fd9904 !important;
+  --border-color-selected: #fd9904 !important;
+  --active-control-color: #fd9904 !important;
+  --active-tab-top-color: #fff6e8 !important;
+  --selection-background-color: #1a0a22 !important;
+  --selection-color: #ffffff !important;
+  --current-query-background-color: #fff4e0 !important;
+  --bar-color: #ffe3b0 !important;
+  --misc-text-color: #6f5f82 !important;
+  --shadow-color: rgba(26, 10, 34, .12) !important;
+  --background-color-rotate: 310 !important;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #f5f1f9 !important;
+  color: #1a0a22;
+}
+#query, textarea, code, pre, .cm-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+#menu {
+  background: #1a0a22 !important;
+  border-right: 2px solid #fd9904 !important;
+  color: #fd9904 !important;
+}
+#menu svg { fill: #fd9904; }
+#menu button, #menu a { color: #fd9904 !important; }
+#github-icon { display: none !important; }
+
+#run, #run-all, button[type="submit"] {
+  border-radius: 10px;
+  color: #1a0a22 !important;
+  font-weight: 700;
+}
+
+#logo-container {
+  display: flex;
+  justify-content: center;
+  padding: 28px 0 4px;
+}
+#logo-container a {
+  display: block;
+  width: 220px;
+  height: 60px;
+  background: url("logo-dark.svg") center / contain no-repeat;
+}
+#logo, #logo-container svg { display: none !important; }
+
+#tab-bar, .tab.active, .tab-active {
+  border-color: #e2d9ec;
+}
+a { color: #b86e00; }

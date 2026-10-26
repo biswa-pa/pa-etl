@@ -1,0 +1,16 @@
+# This Mac already reaches Cube, Prefect and ClickHouse through the gateway.
+# These host ports are the same processes, so the app and local clients do not
+# start a second copy. Airbyte stays the single abctl cluster on port 8000.
+services:
+  prefect-server:
+    ports:
+      - "4200:4200"
+
+  clickhouse:
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+
+  cube:
+    ports:
+      - "4000:4000"

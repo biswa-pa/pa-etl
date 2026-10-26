@@ -16,10 +16,10 @@
   header{padding:40px 48px}
   header img{height:40px;width:auto;display:block}
   .tag{margin-top:6px;font-size:11px;font-weight:600;letter-spacing:.18em;color:var(--orange);text-transform:uppercase}
-  main{max-width:980px;margin:0 auto;padding:40px 32px 80px}
+  main{max-width:1280px;margin:0 auto;padding:40px 32px 80px}
   h1{margin:0 0 10px;font-size:40px;line-height:1.15;font-weight:700;letter-spacing:-.02em}
   .lead{margin:0 0 40px;font-size:18px;line-height:1.6;color:var(--muted);max-width:640px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
   a.card,a.card:visited{color:var(--text);text-decoration:none}
   a.card *{text-decoration:none}
   .card{display:flex;flex-direction:column;background:rgba(36,20,49,.86);border:1px solid var(--line);border-radius:16px;padding:28px;backdrop-filter:blur(6px);transition:border-color .15s,transform .15s}
@@ -40,7 +40,12 @@
   .flow b{color:var(--text);font-weight:600}
   .arrow{color:var(--orange)}
   footer{padding:0 32px 40px;text-align:center;color:#8a7a9c;font-size:12.5px}
-  @media(max-width:640px){header{padding:24px}h1{font-size:30px}main{padding:24px 20px 60px}}
+  @media(max-width:900px){
+    header{padding:24px}
+    h1{font-size:30px}
+    main{padding:24px 20px 60px}
+    .grid{grid-template-columns:repeat(4,minmax(180px,1fr));overflow-x:auto}
+  }
 </style>
 </head>
 <body>
