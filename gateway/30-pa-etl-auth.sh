@@ -1,6 +1,8 @@
 #!/bin/sh
 # Optional password for the Prefect UI and API (Prefect has no login of its own).
 # Set PA_ETL_PREFECT_USER and PA_ETL_PREFECT_PASSWORD to turn it on.
+# Branding is always injected here, so Cube, Prefect, Airbyte and ClickHouse
+# keep the PA ETL look when their own images are upgraded.
 set -eu
 CONF=/etc/nginx/pa-etl-prefect-auth.conf
 if [ -n "${PA_ETL_PREFECT_USER:-}" ] && [ -n "${PA_ETL_PREFECT_PASSWORD:-}" ]; then
@@ -13,16 +15,24 @@ else
   echo "pa-etl: Prefect UI has no password (set PA_ETL_PREFECT_USER and PA_ETL_PREFECT_PASSWORD)"
 fi
 
-# Optional: brand a stock Airbyte at the gateway (not needed with the pa-etl/airbyte-server image).
-BRAND=/etc/nginx/pa-etl-brand-airbyte.conf
-if [ "${AIRBYTE_BRAND_AT_GATEWAY:-false}" = "true" ]; then
-  cat > "$BRAND" <<'NGINX'
+# $1 app name (selects CSS), $2 output file
+write_brand() {
+  css="/__pa/apps.css"
+  case "$1" in
+    prefect) css="/__pa/prefect.css" ;;
+    airbyte) css="/__pa/airbyte.css" ;;
+  esac
+  portal=$(printf '%s' "${PA_ETL_PORTAL_URL:-http://etl.localhost:8080}" | sed 's/"/%22/g')
+  cat > "$2" <<NGINX
 proxy_set_header Accept-Encoding "";
 sub_filter_once off;
 sub_filter_types text/html;
-sub_filter '</head>' '<link rel="stylesheet" href="/__pa/airbyte.css"><script defer src="/__pa/brand.js"></script></head>';
+sub_filter '</head>' '<link rel="stylesheet" href="${css}"><script defer src="/__pa/brand.js?app=${1}&portal=${portal}"></script></head>';
 NGINX
-  echo "pa-etl: branding Airbyte at the gateway"
-else
-  : > "$BRAND"
-fi
+}
+
+write_brand prefect /etc/nginx/pa-etl-brand-prefect.conf
+write_brand airbyte /etc/nginx/pa-etl-brand-airbyte.conf
+write_brand cube /etc/nginx/pa-etl-brand-cube.conf
+write_brand clickhouse /etc/nginx/pa-etl-brand-clickhouse.conf
+echo "pa-etl: branding Cube, Prefect, Airbyte and ClickHouse at the gateway"

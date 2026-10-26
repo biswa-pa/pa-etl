@@ -14,8 +14,9 @@
 #
 # Settings: AIRBYTE_PORT (8000), AIRBYTE_LOW_RESOURCE (1 = less memory), ABCTL_VERSION (v0.30.4),
 #           PA_ETL_HOME (~/.pa-etl, where abctl is kept),
-#           AIRBYTE_BRANDED (1 = install with the PA ETL airbyte-server image, 0 = stock Airbyte),
+#           AIRBYTE_BRANDED (0 = stock Airbyte, branded by the gateway so upgrades keep the look; 1 = baked pa-etl image),
 #           AIRBYTE_SERVER_IMAGE (ghcr.io/biswa-pa/pa-etl/airbyte-server),
+#           AIRBYTE_TAG (2.3.0, also the Helm chart version),
 #           AIRBYTE_HOST (optional: the public host name Airbyte is reached by, for direct access)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -27,11 +28,13 @@ HOME_DIR="${PA_ETL_HOME:-$HOME/.pa-etl}"
 BIN="$HOME_DIR/bin/abctl-$ABCTL_VERSION"
 export DO_NOT_TRACK=1
 
-BRANDED="${AIRBYTE_BRANDED:-1}"
+BRANDED="${AIRBYTE_BRANDED:-0}"
 SERVER_IMAGE="${AIRBYTE_SERVER_IMAGE:-ghcr.io/biswa-pa/pa-etl/airbyte-server}"
+# Published image tag. Must match the Airbyte Helm chart app version.
+# abctl's default chart is newer than the image on GHCR (2.4.0 has no pa-etl image).
+AIRBYTE_TAG="${AIRBYTE_TAG:-2.3.0}"
 
 # Helm values: use the PA ETL Airbyte server image, which has the PA ETL look built into its web UI.
-# Its tag defaults to the chart's app version, and the image is published with that same tag.
 write_values() {
   mkdir -p "$HOME_DIR"
   VALUES="$HOME_DIR/airbyte-values.yaml"
@@ -39,6 +42,7 @@ write_values() {
 server:
   image:
     repository: $SERVER_IMAGE
+    tag: "$AIRBYTE_TAG"
 YAML
 }
 
@@ -103,13 +107,15 @@ fix_dns() {
 case "${1:-}" in
   install)
     need_docker; ensure_abctl; check_linux
-    args=(local install --port "$PORT" --insecure-cookies --no-browser)
+    args=(local install --port "$PORT" --insecure-cookies --no-browser --chart-version "$AIRBYTE_TAG")
     [[ "$LOW" == "1" ]] && args+=(--low-resource-mode)
     [[ -n "${AIRBYTE_HOST:-}" ]] && args+=(--host "$AIRBYTE_HOST")
     if [[ "$BRANDED" == "1" ]]; then
       write_values
       args+=(--values "$VALUES")
-      echo "Installing with the PA ETL Airbyte server image: $SERVER_IMAGE"
+      echo "Installing with the baked PA ETL Airbyte image: $SERVER_IMAGE"
+    else
+      echo "Installing stock Airbyte. The PA ETL gateway adds the look, so a later image upgrade keeps it."
     fi
     fix_dns &
     "$BIN" "${args[@]}"

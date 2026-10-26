@@ -1,25 +1,46 @@
-// PA ETL branding inside the Prefect and Airbyte UIs. Colours live in the CSS files;
-// this file handles what CSS cannot: the page title, icons, visible product names,
-// and the Airbyte sidebar logo.
+// PA ETL branding inside the Prefect, Airbyte, Cube and ClickHouse UIs.
+// The gateway injects this file, so it still applies after those apps are upgraded.
 (function () {
+  if (window.__PA_ETL_BRAND__) return;
+  window.__PA_ETL_BRAND__ = 1;
   var BRAND = "PA ETL";
+  var APP = "";
+  var PORTAL = "/";
   // Folder this script was loaded from (/__pa/ behind the gateway, /assets/pa/ inside Airbyte),
   // so the logo and icon files are found wherever the brand files are served from.
   var BASE = (function () {
-    try { return new URL(".", document.currentScript.src).pathname; } catch (e) { return "/__pa/"; }
+    try {
+      var here = new URL(document.currentScript.src);
+      APP = (here.searchParams.get("app") || "").toLowerCase();
+      PORTAL = here.searchParams.get("portal") || "/";
+      return here.pathname.replace(/[^/]*$/, "");
+    } catch (e) { return "/__pa/"; }
   })();
-  var LABELS = { prefect: "Pipelines", airbyte: "Data sync" };
+  var LABELS = { prefect: "Pipelines", airbyte: "Data sync", cube: "Semantic layer", clickhouse: "Warehouse" };
 
-  // Prefect and Airbyte set their own titles ("Prefect Server", "Flows \u2022 Prefect Server").
-  // A bare app title becomes "PA ETL \u00b7 Pipelines" / "PA ETL \u00b7 Data sync"; page titles keep
-  // their page name and only swap the product name.
+  // A bare app title becomes "PA ETL · Pipelines". Page titles keep their page name
+  // and only swap the product name. Cube and ClickHouse only get a title and the
+  // frame, so a SQL editor is never rewritten.
   function title() {
     var t = document.title || "";
-    var bare = /^(prefect|airbyte)\b/i.exec(t);
+    var bare = /^(prefect|airbyte|cube|clickhouse)\b/i.exec(t);
     var next = bare && !/\u2022|\|/.test(t)
-      ? BRAND + " \u00b7 " + LABELS[bare[1].toLowerCase()]
+      ? BRAND + " \u00b7 " + (LABELS[bare[1].toLowerCase()] || bare[1])
       : t.replace(/\bPrefect Server\b/g, BRAND).replace(/\b(Prefect|Airbyte)\b/g, BRAND);
+    if ((APP === "cube" || APP === "clickhouse") && !/\bPA ETL\b/.test(next)) {
+      next = BRAND + " \u00b7 " + LABELS[APP];
+    }
     if (next !== t) document.title = next;
+  }
+
+  // Upgrade-safe frame: it does not depend on the app's own class names.
+  function frame() {
+    if (APP !== "cube" && APP !== "clickhouse") return;
+    if (document.getElementById("pa-etl-bar")) return;
+    var bar = document.createElement("div");
+    bar.id = "pa-etl-bar";
+    bar.innerHTML = '<img alt="" src="' + BASE + 'logo.svg"><span>' + LABELS[APP] + '</span><a href="' + PORTAL + '">PA ETL</a>';
+    (document.body || document.documentElement).insertBefore(bar, (document.body || document.documentElement).firstChild);
   }
 
   function icons() {
@@ -191,6 +212,7 @@
     pending = [];
     for (var i = 0; i < batch.length; i++) walk(batch[i]);
     title();
+    frame();
     prefectV2();
     airbyteSidebarLogo();
     airbyteLoginLogo();
@@ -210,6 +232,7 @@
   title();
   function start() {
     walk(document.body);
+    frame();
     prefectV2();
     airbyteSidebarLogo();
     airbyteLoginLogo();

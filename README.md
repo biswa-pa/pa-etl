@@ -75,8 +75,12 @@ Open **http://etl.localhost:8080**. On your own machine, `*.localhost` names res
 | Address | What it is |
 |---|---|
 | http://etl.localhost:8080 | portal |
-| http://pipeline.localhost:8080 | Prefect UI (Pipelines) |
-| http://connecter.localhost:8080 | Airbyte UI (Data sync) |
+| http://localhost:8081 | Prefect (official image, PA ETL look added by the gateway) |
+| http://localhost:8082 | Airbyte |
+| http://localhost:8083 | Cube |
+| http://localhost:8084/play | ClickHouse |
+
+`pipeline.localhost:8080` and `connecter.localhost:8080` still open Prefect and Airbyte. The four ports above are the ones the portal uses. Cube and ClickHouse stay on the Docker network; only the gateway publishes their pages.
 
 The first Airbyte visit asks you to create the owner login. `scripts/airbyte.sh credentials` prints the password and the API client id and secret.
 
@@ -197,6 +201,12 @@ scripts/build-images.sh --save pa-etl.tar        # one file for offline use, the
 The Prefect and gateway images are versioned by `VERSION` (and `:latest`). The Airbyte image is versioned by the Airbyte release it is built on (`AIRBYTE_TAG`).
 
 ## How the branding works
+
+The gateway injects `brand/brand.js` and the CSS into the HTML of Cube, Prefect, Airbyte and ClickHouse. The apps themselves stay the official images. Pull a newer image and the same look is applied again; nothing is patched inside Cube, Prefect, Airbyte or ClickHouse.
+
+`docker compose pull && docker compose up -d` upgrades the official Prefect, Cube and ClickHouse images inside this project. Airbyte stays the self-hosted `abctl` install; `scripts/airbyte.sh install` with `AIRBYTE_BRANDED=0` upgrades it. The gateway adds the PA ETL look after every upgrade.
+
+The older baked images (`prefect/Dockerfile`, `airbyte/Dockerfile`) are optional. They are not what Compose runs.
 
 - **Prefect:** `prefect/brand_ui.py` runs when the image is built. It copies the brand files into Prefect's own UI folders, patches both `index.html` files to load them, and swaps the icons. Both UIs are themed with CSS variables, so `brand/prefect.css` changes colours and the logo. The V2 UI (`/v2/...`) gets a dark purple sidebar with an orange active edge, soft cards, a matching dark mode, and no Prefect Cloud upsell.
 - **Airbyte:** `airbyte/patch-webapp.sh` runs when the image is built. Airbyte serves its UI from inside its server jar, so the script adds the brand files to that jar (served from `/assets/pa/`, the only static folder Airbyte serves) and patches `index.html` and the icons. `brand/airbyte.css` gives it the same look as Prefect V2: dark purple sidebar with an orange active edge, a soft purple-grey page, rounded connector cards that lift on hover, a larger search box, orange tab underlines. Light and dark mode each have their own colour scale, because Airbyte inverts its scale in dark mode.

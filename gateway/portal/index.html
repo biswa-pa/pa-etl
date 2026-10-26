@@ -19,7 +19,7 @@
   main{max-width:980px;margin:0 auto;padding:40px 32px 80px}
   h1{margin:0 0 10px;font-size:40px;line-height:1.15;font-weight:700;letter-spacing:-.02em}
   .lead{margin:0 0 40px;font-size:18px;line-height:1.6;color:var(--muted);max-width:640px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
   a.card,a.card:visited{color:var(--text);text-decoration:none}
   a.card *{text-decoration:none}
   .card{display:flex;flex-direction:column;background:rgba(36,20,49,.86);border:1px solid var(--line);border-radius:16px;padding:28px;backdrop-filter:blur(6px);transition:border-color .15s,transform .15s}
@@ -50,16 +50,16 @@
 </header>
 <main>
   <h1>Welcome to PA ETL</h1>
-  <p class="lead">One place to connect your data sources and to schedule and watch the pipelines that move them. Pick where to start.</p>
+  <p class="lead">Cube, Prefect, Airbyte and ClickHouse, each on its own port, with the PA ETL look. Open them from here.</p>
   <div class="grid">
-    <a class="card" id="airbyte-card" href="#">
+    <a class="card" id="cube-card" href="#">
       <div class="top">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg></div>
-        <span class="status"><span class="dot" id="airbyte-dot"></span><span id="airbyte-text">Checking</span></span>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></div>
+        <span class="status"><span class="dot" id="cube-dot"></span><span id="cube-text">Checking</span></span>
       </div>
-      <h2>Data sync</h2>
-      <p>Connect databases, apps and files, and copy their data into your warehouse. Powered by Airbyte.</p>
-      <span class="btn">Open data sync &rarr;</span>
+      <h2>Semantic layer</h2>
+      <p>Query the warehouse through Cube. Port 8083.</p>
+      <span class="btn">Open Cube &rarr;</span>
     </a>
     <a class="card" id="prefect-card" href="#">
       <div class="top">
@@ -67,11 +67,29 @@
         <span class="status"><span class="dot" id="prefect-dot"></span><span id="prefect-text">Checking</span></span>
       </div>
       <h2>Pipelines</h2>
-      <p>Schedule flows, watch every run, retry failures and get alerted. Powered by Prefect.</p>
-      <span class="btn">Open pipelines &rarr;</span>
+      <p>Schedule flows and watch every run. Port 8081. Powered by Prefect.</p>
+      <span class="btn">Open Prefect &rarr;</span>
+    </a>
+    <a class="card" id="airbyte-card" href="#">
+      <div class="top">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg></div>
+        <span class="status"><span class="dot" id="airbyte-dot"></span><span id="airbyte-text">Checking</span></span>
+      </div>
+      <h2>Data sync</h2>
+      <p>Connect sources and copy them into the warehouse. Port 8082. Powered by Airbyte.</p>
+      <span class="btn">Open Airbyte &rarr;</span>
+    </a>
+    <a class="card" id="clickhouse-card" href="#">
+      <div class="top">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-6M22 20H2"/></svg></div>
+        <span class="status"><span class="dot" id="clickhouse-dot"></span><span id="clickhouse-text">Checking</span></span>
+      </div>
+      <h2>Warehouse</h2>
+      <p>Query ClickHouse in the browser. Port 8084.</p>
+      <span class="btn">Open ClickHouse &rarr;</span>
     </a>
   </div>
-  <div class="flow"><b>How they fit:</b> sources <span class="arrow">&rarr;</span> <b>Data sync</b> moves the data <span class="arrow">&rarr;</span> <b>Pipelines</b> schedule it and run the steps around it <span class="arrow">&rarr;</span> your warehouse.</div>
+  <div class="flow"><b>How they fit:</b> sources <span class="arrow">&rarr;</span> <b>Airbyte</b> lands the data <span class="arrow">&rarr;</span> <b>ClickHouse</b> stores it <span class="arrow">&rarr;</span> <b>Cube</b> serves it <span class="arrow">&rarr;</span> <b>Prefect</b> schedules the steps.</div>
 </main>
 <footer>PA ETL &middot; Predicta Analytics</footer>
 <script>
@@ -84,10 +102,12 @@
     }).catch(function () { dot.className = "dot down"; txt.textContent = "Not running"; });
   }
   fetch("/config.json").then(function (r) { return r.json(); }).then(function (c) {
+    document.getElementById("cube-card").href = c.cube;
     document.getElementById("prefect-card").href = c.prefect;
     document.getElementById("airbyte-card").href = c.airbyte;
+    document.getElementById("clickhouse-card").href = c.clickhouse;
   });
-  function poll() { status("prefect"); status("airbyte"); }
+  function poll() { status("cube"); status("prefect"); status("airbyte"); status("clickhouse"); }
   poll(); setInterval(poll, 15000);
 })();
 </script>

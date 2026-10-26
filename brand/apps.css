@@ -1,0 +1,22 @@
+/* Frame added by brand.js for Cube and ClickHouse. It does not restyle the
+   app itself, so it still fits after those images are upgraded. */
+#pa-etl-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 14px;
+  background: #1a0a22;
+  color: #f4eefa;
+  font: 600 13px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+  border-bottom: 2px solid #fd9904;
+}
+#pa-etl-bar img { height: 18px; width: auto; }
+#pa-etl-bar span { letter-spacing: .04em; }
+#pa-etl-bar a { margin-left: auto; color: #fd9904; text-decoration: none; }
+body { padding-top: 40px !important; }

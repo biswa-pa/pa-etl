@@ -25,17 +25,14 @@ services:
     restart: unless-stopped
 
   prefect-server:
-    image: ${PA_IMAGE_PREFIX:-ghcr.io/biswa-pa/pa-etl}/prefect:${PA_VERSION:-latest}
-    build:
-      context: .
-      dockerfile: prefect/Dockerfile
-      args:
-        PREFECT_TAG: ${PREFECT_TAG:-3.8.8-python3.12}
+    image: prefecthq/prefect:${PREFECT_TAG:-3-latest}
+    pull_policy: always
     command: prefect server start --host 0.0.0.0 --port 4200
     environment:
       PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://prefect:${POSTGRES_PASSWORD:-pa-etl-change-me}@postgres:5432/prefect
-      PREFECT_UI_API_URL: ${PA_ETL_PREFECT_URL:-http://pipeline.localhost:8080}/api
+      PREFECT_UI_API_URL: ${PA_ETL_PREFECT_URL:-http://localhost:8081}/api
       PREFECT_API_URL: http://localhost:4200/api
+      PREFECT_SERVER_ANALYTICS_ENABLED: "false"
     depends_on:
       postgres: { condition: service_healthy }
     healthcheck:
@@ -48,28 +45,76 @@ services:
 
   # One-shot: creates the work pool and registers the example deployments.
   prefect-deploy:
-    image: ${PA_IMAGE_PREFIX:-ghcr.io/biswa-pa/pa-etl}/prefect:${PA_VERSION:-latest}
-    command: pa-etl-deploy
+    image: prefecthq/prefect:${PREFECT_TAG:-3-latest}
+    pull_policy: always
+    entrypoint: ["sh", "/opt/pa-etl/entrypoint-deploy.sh"]
     environment:
+      PYTHONPATH: /opt/pa-etl
       PREFECT_API_URL: http://prefect-server:4200/api
       PA_ETL_WORK_POOL: ${PA_ETL_WORK_POOL:-pa-etl}
+    volumes:
+      - ./prefect/entrypoint-deploy.sh:/opt/pa-etl/entrypoint-deploy.sh:ro
+      - ./prefect/pa_etl:/opt/pa-etl/pa_etl:ro
+      - ./prefect/flows:/opt/pa-etl/flows:ro
     depends_on:
       prefect-server: { condition: service_healthy }
     restart: "no"
 
   # Runs the flows. Mount your own flows over /opt/pa-etl/flows to use them.
   prefect-worker:
-    image: ${PA_IMAGE_PREFIX:-ghcr.io/biswa-pa/pa-etl}/prefect:${PA_VERSION:-latest}
+    image: prefecthq/prefect:${PREFECT_TAG:-3-latest}
+    pull_policy: always
     command: prefect worker start --pool ${PA_ETL_WORK_POOL:-pa-etl} --type process
     environment:
+      PYTHONPATH: /opt/pa-etl
       PREFECT_API_URL: http://prefect-server:4200/api
       AIRBYTE_URL: ${AIRBYTE_URL:-http://host.docker.internal:8000}
       AIRBYTE_CLIENT_ID: ${AIRBYTE_CLIENT_ID:-}
       AIRBYTE_CLIENT_SECRET: ${AIRBYTE_CLIENT_SECRET:-}
+    volumes:
+      - ./prefect/pa_etl:/opt/pa-etl/pa_etl:ro
+      - ./prefect/flows:/opt/pa-etl/flows:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
       prefect-deploy: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  # Official ClickHouse. No host port: the warehouse UI is only the gateway on 8084.
+  clickhouse:
+    image: clickhouse/clickhouse-server:${CLICKHOUSE_TAG:-latest}
+    pull_policy: always
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-analytics_admin}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-localdev}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-sl_test}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user \"$$CLICKHOUSE_USER\" --password \"$$CLICKHOUSE_PASSWORD\" -q 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+    restart: unless-stopped
+
+  # Official Cube. No host port: the semantic layer UI is only the gateway on 8083.
+  cube:
+    image: cubejs/cube:${CUBE_TAG:-latest}
+    pull_policy: always
+    environment:
+      CUBEJS_DEV_MODE: "true"
+      CUBEJS_DB_TYPE: clickhouse
+      CUBEJS_DB_HOST: clickhouse
+      CUBEJS_DB_PORT: "8123"
+      CUBEJS_DB_NAME: ${CLICKHOUSE_DB:-sl_test}
+      CUBEJS_DB_USER: ${CLICKHOUSE_USER:-analytics_admin}
+      CUBEJS_DB_PASS: ${CLICKHOUSE_PASSWORD:-localdev}
+      CUBEJS_API_SECRET: ${CUBEJS_API_SECRET:-local-cube-secret}
+      CUBEJS_TELEMETRY: "false"
+    depends_on:
+      clickhouse: { condition: service_healthy }
     restart: unless-stopped
 
   gateway:
@@ -82,21 +127,31 @@ services:
       PA_ETL_PREFECT_HOST: ${PA_ETL_PREFECT_HOST:-pipeline.localhost}
       PA_ETL_AIRBYTE_HOST: ${PA_ETL_AIRBYTE_HOST:-connecter.localhost}
       PA_ETL_PORTAL_URL: ${PA_ETL_PORTAL_URL:-http://etl.localhost:8080}
-      PA_ETL_PREFECT_URL: ${PA_ETL_PREFECT_URL:-http://pipeline.localhost:8080}
-      PA_ETL_AIRBYTE_URL: ${PA_ETL_AIRBYTE_URL:-http://connecter.localhost:8080}
+      PA_ETL_PREFECT_URL: ${PA_ETL_PREFECT_URL:-http://localhost:8081}
+      PA_ETL_AIRBYTE_URL: ${PA_ETL_AIRBYTE_URL:-http://localhost:8082}
+      PA_ETL_CUBE_URL: ${PA_ETL_CUBE_URL:-http://localhost:8083}
+      PA_ETL_CLICKHOUSE_URL: ${PA_ETL_CLICKHOUSE_URL:-http://localhost:8084/play}
       AIRBYTE_UPSTREAM: ${AIRBYTE_UPSTREAM:-host.docker.internal:8000}
       AIRBYTE_HOST_HEADER: ${AIRBYTE_HOST_HEADER:-localhost}
       AIRBYTE_ORIGIN: ${AIRBYTE_ORIGIN:-http://localhost:8000}
-      AIRBYTE_BRAND_AT_GATEWAY: ${AIRBYTE_BRAND_AT_GATEWAY:-false}
+      CUBE_UPSTREAM: ${CUBE_UPSTREAM:-cube:4000}
+      CLICKHOUSE_UPSTREAM: ${CLICKHOUSE_UPSTREAM:-clickhouse:8123}
       PA_ETL_PREFECT_USER: ${PA_ETL_PREFECT_USER:-}
       PA_ETL_PREFECT_PASSWORD: ${PA_ETL_PREFECT_PASSWORD:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
       - "${PA_ETL_BIND:-0.0.0.0}:${PA_ETL_PORT:-8080}:80"
+      - "${PA_ETL_BIND:-0.0.0.0}:${PA_ETL_PREFECT_PORT:-8081}:8081"
+      - "${PA_ETL_BIND:-0.0.0.0}:${PA_ETL_AIRBYTE_PORT:-8082}:8082"
+      - "${PA_ETL_BIND:-0.0.0.0}:${PA_ETL_CUBE_PORT:-8083}:8083"
+      - "${PA_ETL_BIND:-0.0.0.0}:${PA_ETL_CLICKHOUSE_PORT:-8084}:8084"
     depends_on:
       prefect-server: { condition: service_healthy }
+      clickhouse: { condition: service_healthy }
+      cube: { condition: service_started }
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  clickhouse_data:
